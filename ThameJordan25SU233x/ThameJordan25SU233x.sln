@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThameJordan25SU233x", "ThameJordan25SU233x\ThameJordan25SU233x.csproj", "{160A45B5-D134-42C0-A6FB-E007054428ED}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "SmolTech", "SmolTech\SmolTech.vdproj", "{0239D6A2-35BD-44A7-6A5E-201A64EF6F92}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{160A45B5-D134-42C0-A6FB-E007054428ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{160A45B5-D134-42C0-A6FB-E007054428ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{160A45B5-D134-42C0-A6FB-E007054428ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{160A45B5-D134-42C0-A6FB-E007054428ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0239D6A2-35BD-44A7-6A5E-201A64EF6F92}.Debug|Any CPU.ActiveCfg = Debug
+		{0239D6A2-35BD-44A7-6A5E-201A64EF6F92}.Release|Any CPU.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9160E95E-FB0A-46DE-BC19-8476F8AF3C81}
+	EndGlobalSection
+EndGlobal
