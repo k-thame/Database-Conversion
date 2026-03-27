@@ -28,7 +28,6 @@ namespace ThameJordan25SU233x
 
         private void frmManaging_Load(object sender, EventArgs e)
         {
-            //
             this.Shown -= frmManaging_Shown;
             this.Activated -= frmManaging_Activated;
             this.Shown += frmManaging_Shown;
@@ -40,25 +39,18 @@ namespace ThameJordan25SU233x
             {
                 string message = "Low Stock Alerts:\n\n";
                 foreach (DataRow row in lowStock.Rows)
-                {
                     message += $"- {row["ItemName"]} (Qty: {row["Quantity"]}, Threshold: {row["RestockThreshold"]})\n";
-                }
                 MessageBox.Show(message, "Restock Needed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
 
             RefreshInventoryDGV();
             UpdateSelectionUI();
 
-            // Hook handlers that should only run on click
             btnMyProfile.Click -= btnMyProfile_Click;
             btnMyProfile.Click += btnMyProfile_Click;
         }
 
-        // 
-        private void frmManaging_Shown(object sender, EventArgs e) 
-        {  
-        
-        }
+        private void frmManaging_Shown(object sender, EventArgs e) { }
 
         // Never auto-open frmUsers on activation
         private void frmManaging_Activated(object sender, EventArgs e)
@@ -71,25 +63,16 @@ namespace ThameJordan25SU233x
             StartShoppingForSelectedCustomer();
         }
 
-
-        // --------------- Inventory grid ---------------
+        // Refresh the inventory grid
         private void RefreshInventoryDGV()
         {
-            DataTable dt = clsSQL.ManagerViewInventory(dgvInventory);
-            if (dt == null) return;
-
-            DataTable dtCopy = dt.Copy();
-
-            if (dt.Columns.Contains("ItemImage"))
-                dt.Columns.Remove("ItemImage");
-            dgvInventory.DataSource = dt;
+            clsSQL.ManagerViewInventory(dgvInventory);
 
             if (dgvInventory.Columns.Contains("ItemDescription"))
             {
                 dgvInventory.Columns["ItemDescription"].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
                 dgvInventory.Columns["ItemDescription"].Width = 300;
             }
-
             if (dgvInventory.Columns.Contains("ProductImage"))
                 dgvInventory.Columns["ProductImage"].Width = 55;
             if (dgvInventory.Columns.Contains("ItemName"))
@@ -104,21 +87,6 @@ namespace ThameJordan25SU233x
                 dgvInventory.Columns["Discontinued"].Width = 60;
 
             dgvInventory.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
-
-            if (dtCopy.Columns.Contains("ItemImage") && dgvInventory.Columns.Contains("ProductImage"))
-            {
-                for (int i = 0; i < dgvInventory.Rows.Count; i++)
-                {
-                    byte[] imgBytes = dtCopy.Rows[i]["ItemImage"] as byte[];
-                    if (imgBytes != null)
-                    {
-                        using (MemoryStream ms = new MemoryStream(imgBytes))
-                        {
-                            dgvInventory.Rows[i].Cells["ProductImage"].Value = Image.FromStream(ms);
-                        }
-                    }
-                }
-            }
         }
 
         private void dgvInventory_SelectionChanged(object sender, EventArgs e)
@@ -141,6 +109,7 @@ namespace ThameJordan25SU233x
             }
         }
 
+        // Restock selected item
         private void btnRestock_Click(object sender, EventArgs e)
         {
             if (dgvInventory.CurrentRow == null)
@@ -168,33 +137,15 @@ namespace ThameJordan25SU233x
                 MessageBox.Show($"{quantityToAdd} units of \"{itemName}\" successfully restocked.",
                     "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                DataTable dt = clsSQL.ManagerViewInventory(dgvInventory);
-                DataTable dtCopy = dt.Copy();
-
-                dt.Columns.Remove("ItemImage");
-                dgvInventory.DataSource = dt;
-
-                for (int i = 0; i < dgvInventory.Rows.Count; i++)
-                {
-                    byte[] imgBytes = dtCopy.Rows[i]["ItemImage"] as byte[];
-                    if (imgBytes != null)
-                    {
-                        using (MemoryStream ms = new MemoryStream(imgBytes))
-                        {
-                            dgvInventory.Rows[i].Cells["ProductImage"].Value = Image.FromStream(ms);
-                        }
-                    }
-                }
+                RefreshInventoryDGV();
 
                 DataRow itemInfo = db.RestockSpecificItem(inventoryID);
                 int quantity = Convert.ToInt32(itemInfo["Quantity"]);
                 int threshold = Convert.ToInt32(itemInfo["RestockThreshold"]);
 
                 if (quantity < threshold)
-                {
                     MessageBox.Show($"'{itemName}' is still below its restock threshold.\nQty: {quantity} | Threshold: {threshold}",
                         "Low Stock Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
 
                 nudRestock.Value = 0;
             }
@@ -204,6 +155,7 @@ namespace ThameJordan25SU233x
             }
         }
 
+        // Decrease stock of selected item
         private void btnDecreaseQty_Click(object sender, EventArgs e)
         {
             try
@@ -239,7 +191,6 @@ namespace ThameJordan25SU233x
                     var confirmResult = MessageBox.Show(
                         $"Are you sure you want to decrease the stock of \"{itemName}\" to 0?",
                         "Empty Stock Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-
                     if (confirmResult == DialogResult.No) return;
                 }
 
@@ -250,33 +201,15 @@ namespace ThameJordan25SU233x
                     MessageBox.Show($"{decreaseAmount} units of \"{itemName}\" successfully removed from inventory.",
                         "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                    DataTable dt = clsSQL.ManagerViewInventory(dgvInventory);
-                    DataTable dtCopy = dt.Copy();
-
-                    dt.Columns.Remove("ItemImage");
-                    dgvInventory.DataSource = dt;
-
-                    for (int i = 0; i < dgvInventory.Rows.Count; i++)
-                    {
-                        byte[] imgBytes = dtCopy.Rows[i]["ItemImage"] as byte[];
-                        if (imgBytes != null)
-                        {
-                            using (MemoryStream ms = new MemoryStream(imgBytes))
-                            {
-                                dgvInventory.Rows[i].Cells["ProductImage"].Value = Image.FromStream(ms);
-                            }
-                        }
-                    }
+                    RefreshInventoryDGV();
 
                     DataRow itemInfo = db.RestockSpecificItem(inventoryID);
                     int quantity = Convert.ToInt32(itemInfo["Quantity"]);
                     int threshold = Convert.ToInt32(itemInfo["RestockThreshold"]);
 
                     if (quantity < threshold)
-                    {
                         MessageBox.Show($"'{itemName}' is still below its restock threshold.\nQty: {quantity} | Threshold: {threshold}",
                             "Low Stock Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
 
                     nudRemoveFromStock.Value = 0;
                 }
@@ -291,6 +224,7 @@ namespace ThameJordan25SU233x
             }
         }
 
+        // Open add item form
         private void btnAddItem_Click(object sender, EventArgs e)
         {
             this.Hide();
@@ -301,7 +235,7 @@ namespace ThameJordan25SU233x
                     newItem.StartPosition = FormStartPosition.CenterParent;
                     newItem.ShowDialog(this);
                 }
-                RefreshInventoryDGV(); 
+                RefreshInventoryDGV();
             }
             finally
             {
@@ -310,7 +244,7 @@ namespace ThameJordan25SU233x
             }
         }
 
-
+        // Discontinue selected item
         private void btnRemove_Click(object sender, EventArgs e)
         {
             try
@@ -323,7 +257,7 @@ namespace ThameJordan25SU233x
                 }
 
                 var discontinuedObj = dgvInventory.CurrentRow.Cells["Discontinued"].Value;
-                bool isDiscontinued = discontinuedObj != DBNull.Value && Convert.ToBoolean(discontinuedObj);
+                bool isDiscontinued = discontinuedObj != DBNull.Value && Convert.ToInt32(discontinuedObj) == 1;
                 if (isDiscontinued)
                 {
                     MessageBox.Show("This item has already been discontinued.", "Already Discontinued",
@@ -359,6 +293,7 @@ namespace ThameJordan25SU233x
             }
         }
 
+        // Open user management form
         private void btnModifyUser_Click(object sender, EventArgs e)
         {
             if (_usersDialogOpen) return;
@@ -373,7 +308,6 @@ namespace ThameJordan25SU233x
                     modifyUser.ShowInTaskbar = false;
                     modifyUser.MinimizeBox = false;
                     modifyUser.MaximizeBox = false;
-
                     modifyUser.ShowDialog(this);
                 }
             }
@@ -386,7 +320,7 @@ namespace ThameJordan25SU233x
             }
         }
 
-
+        // Open discounts form
         private void btnDiscounts_Click(object sender, EventArgs e)
         {
             this.Hide();
@@ -405,7 +339,7 @@ namespace ThameJordan25SU233x
             }
         }
 
-
+        // Open sales reports form
         private void btnSalesReports_Click(object sender, EventArgs e)
         {
             this.Hide();
@@ -424,7 +358,7 @@ namespace ThameJordan25SU233x
             }
         }
 
-
+        // Select a customer for POS
         private void button1_Click(object sender, EventArgs e)
         {
             using (var dlg = new frmSelectCustomer())
@@ -446,11 +380,12 @@ namespace ThameJordan25SU233x
                             phone = Convert.ToString(row["PhonePrimary"] ?? "").Trim();
                         }
                     }
-                    catch { /* non-fatal */ }
+                    catch { }
 
                     var lbl = this.Controls.Find("lblSelectedCustomer", true);
                     string summary = $"Customer: {fullName}  (ID {_selectedCustomerId.Value})" + (string.IsNullOrEmpty(phone) ? "" : $"  •  {phone}");
-                    if (lbl != null && lbl.Length > 0) lbl[0].Text = summary; else this.Text = "Point of Sale — " + summary;
+                    if (lbl != null && lbl.Length > 0) lbl[0].Text = summary;
+                    else this.Text = "Point of Sale — " + summary;
 
                     UpdateSelectionUI();
 
@@ -458,22 +393,18 @@ namespace ThameJordan25SU233x
                         $"Customer selected:\n\n{fullName}\nID: {_selectedCustomerId.Value}" +
                         (string.IsNullOrEmpty(phone) ? "" : $"\nPhone: {phone}") +
                         "\n\nDo you want to proceed to the shopping page now?",
-                        "Start Shopping?", MessageBoxButtons.YesNo, MessageBoxIcon.Question
-                    );
+                        "Start Shopping?", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
                     if (result == DialogResult.Yes)
-                    {
                         StartShoppingForSelectedCustomer();
-                    }
                     else
-                    {
                         MessageBox.Show("You can now click 'View History' to review past orders or 'Start Shopping' when ready.",
                             "Next steps", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
                 }
             }
         }
 
+        // Start shopping for selected customer
         private void StartShoppingForSelectedCustomer()
         {
             if (!_selectedCustomerId.HasValue)
@@ -483,7 +414,6 @@ namespace ThameJordan25SU233x
             }
 
             string personIdString = _selectedCustomerId.Value.ToString();
-
             this.Hide();
             try
             {
@@ -492,7 +422,6 @@ namespace ThameJordan25SU233x
                     shop.IsPOSSale = true;
                     shop.ManagerID = GetManagerDisplayNameSafe();
                     shop.Tag = ManagerEmployeeID;
-
                     shop.StartPosition = FormStartPosition.CenterParent;
                     shop.ShowDialog(this);
                 }
@@ -504,14 +433,13 @@ namespace ThameJordan25SU233x
             }
         }
 
-
         private void btnHelp_Click(object sender, EventArgs e)
         {
             MessageBox.Show(
                 "Welcome to General Management.\n\n" +
                 "Inventory actions:\n" +
                 "1. **Inventory Table** – Large grid shows current products.\n" +
-                "2. **Restock Selected Item** – Enter a quantity and click **Re-stock** to add to the selected item’s stock.\n" +
+                "2. **Restock Selected Item** – Enter a quantity and click **Re-stock** to add to the selected item's stock.\n" +
                 "3. **Remove stock of selected Item** – Enter a quantity and click **Remove** to deduct from stock.\n" +
                 "4. **Add New Item!** – Click **Add** to open the Add Item form.\n" +
                 "5. **Discontinue an Item** – Select a product and click **Remove** to mark it unavailable.\n\n" +
@@ -526,17 +454,16 @@ namespace ThameJordan25SU233x
                 "Tips:\n" +
                 "- Always select the correct row before restocking or removing stock.\n" +
                 "- Use **Add New Item** for new products rather than editing in-place.\n" +
-                "- Discontinued items won’t appear as available for sale.",
+                "- Discontinued items won't appear as available for sale.",
                 "General Management – Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+
         private void btnExit_Click(object sender, EventArgs e)
         {
             var confirm = MessageBox.Show(
                 "Are you sure you want to exit Manager Mode?\nAny unsaved changes will be lost.",
                 "Confirm Exit", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-
-            if (confirm == DialogResult.Yes)
-                this.Close();
+            if (confirm == DialogResult.Yes) this.Close();
         }
 
         private void btnViewHistory_Click(object sender, EventArgs e)
@@ -544,10 +471,9 @@ namespace ThameJordan25SU233x
             if (!_selectedCustomerId.HasValue)
             {
                 MessageBox.Show("Please select a customer first.", "No Customer",
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-
             try
             {
                 clsHTML.ShowCustomerHistoryHtml(_selectedCustomerId.Value);
@@ -555,34 +481,28 @@ namespace ThameJordan25SU233x
             catch (Exception ex)
             {
                 MessageBox.Show("Unable to load history:\n" + ex.Message, "Error",
-                                MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
 
         private void UpdateSelectionUI()
         {
             bool hasCustomer = _selectedCustomerId.HasValue;
 
             var btnView = this.Controls.Find("btnViewHistory", true).FirstOrDefault() as Button;
-            if (btnView != null) { btnView.Visible = hasCustomer; btnView.Enabled = hasCustomer; }
-
             var btnStart = this.Controls.Find("btnStartShopping", true).FirstOrDefault() as Button;
-            if (btnStart != null) { btnStart.Visible = hasCustomer; btnStart.Enabled = hasCustomer; }
-
             var btnShop = this.Controls.Find("btnShopForTheCustomer", true).FirstOrDefault() as Button;
+
+            if (btnView != null) { btnView.Visible = hasCustomer; btnView.Enabled = hasCustomer; }
+            if (btnStart != null) { btnStart.Visible = hasCustomer; btnStart.Enabled = hasCustomer; }
             if (btnShop != null) { btnShop.Visible = hasCustomer; btnShop.Enabled = hasCustomer; }
         }
 
         private string GetManagerDisplayNameSafe()
         {
-            if (!string.IsNullOrWhiteSpace(ManagerDisplayName))
-                return ManagerDisplayName.Trim();
-
+            if (!string.IsNullOrWhiteSpace(ManagerDisplayName)) return ManagerDisplayName.Trim();
             var lbl = this.Controls.Find("lblManagerName", true).FirstOrDefault() as Label;
-            if (lbl != null && !string.IsNullOrWhiteSpace(lbl.Text))
-                return lbl.Text.Trim();
-
+            if (lbl != null && !string.IsNullOrWhiteSpace(lbl.Text)) return lbl.Text.Trim();
             return "";
         }
 
@@ -593,7 +513,7 @@ namespace ThameJordan25SU233x
             if (!ManagerEmployeeID.HasValue)
             {
                 MessageBox.Show("Your Employee/Person ID is missing. Please re-login or contact admin.",
-                                "My Profile", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    "My Profile", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -601,11 +521,7 @@ namespace ThameJordan25SU233x
             this.Hide();
             try
             {
-                using (var f = new frmUsers
-                {
-                    PreselectEmployeeID = ManagerEmployeeID,
-                    SelfEditOnly = true
-                })
+                using (var f = new frmUsers { PreselectEmployeeID = ManagerEmployeeID, SelfEditOnly = true })
                 {
                     f.StartPosition = FormStartPosition.CenterParent;
                     f.ShowDialog(this);
@@ -619,6 +535,5 @@ namespace ThameJordan25SU233x
                 _suppressUsersRelaunchUntil = DateTime.UtcNow.AddMilliseconds(500);
             }
         }
-
     }
 }

@@ -16,10 +16,14 @@ namespace ThameJordan25SU233x
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            
+
+            // Create the local SQLite database on first run (skipped if it already exists)
+            DatabaseInitializer.EnsureCreated();
+
             // Handle user sign in
             using (frmLogon loginForm = new frmLogon())
             {
+                // Only open the shopping form if login was successful
                 if (loginForm.ShowDialog() == DialogResult.OK)
                 {
                     string personID = loginForm.PersonID;
