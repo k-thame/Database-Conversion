@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThameJordan25SU233x", "Tham
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "SmolTech", "SmolTech\SmolTech.vdproj", "{0239D6A2-35BD-44A7-6A5E-201A64EF6F92}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "SmolTech", "SmolTech\SmolTech.vdproj", "{6382ABC5-4F26-4713-9234-29DEDE87F2C0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,8 @@ Global
 		{160A45B5-D134-42C0-A6FB-E007054428ED}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0239D6A2-35BD-44A7-6A5E-201A64EF6F92}.Debug|Any CPU.ActiveCfg = Debug
 		{0239D6A2-35BD-44A7-6A5E-201A64EF6F92}.Release|Any CPU.ActiveCfg = Release
+		{6382ABC5-4F26-4713-9234-29DEDE87F2C0}.Debug|Any CPU.ActiveCfg = Debug
+		{6382ABC5-4F26-4713-9234-29DEDE87F2C0}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -380,7 +380,7 @@ namespace ThameJordan25SU233x
                     object v = r[c];
                     string cell;
                     if (string.Equals(c, "RetailPrice", StringComparison.OrdinalIgnoreCase) && v != DBNull.Value)
-                        cell = Convert.ToDecimal(v).ToString("C");
+                        cell = Convert.ToString(v);
                     else if (v == DBNull.Value) cell = "";
                     else cell = Convert.ToString(v);
                     sb.Append($"<td>{System.Net.WebUtility.HtmlEncode(cell)}</td>");

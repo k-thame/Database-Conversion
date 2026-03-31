@@ -81,12 +81,12 @@ namespace ThameJordan25SU233x
                 decimal cost = nudCost.Value;            
                 decimal quantity = nudQuantity.Value;        
                 decimal restock = nudRestockThreshold.Value;
-                bool discontinued = false;                    
+                bool discontinued = false;
 
                 // Category
                 int categoryID = -1;
-                if (cbxItemCategory.SelectedValue is int v) categoryID = v;
-                else if (cbxItemCategory.SelectedIndex >= 0 && int.TryParse(cbxItemCategory.SelectedValue?.ToString(), out var v2)) categoryID = v2;
+                if (cbxItemCategory.SelectedValue != null && cbxItemCategory.SelectedValue != DBNull.Value)
+                    categoryID = Convert.ToInt32(cbxItemCategory.SelectedValue);
 
                 // Image bytes
                 byte[] imageBytes = null;

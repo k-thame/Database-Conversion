@@ -127,9 +127,9 @@ namespace ThameJordan25SU233x
                 string userSecondaryPhoneNumber = tbxPhoneNumberTwo.Text.Trim();
 
                 // Security Questions 
-                int FirstChallengeQuestion = cbxSecQuestion1.SelectedValue is int v1 ? v1 : 0;
-                int SecondChallengeQuestion = cbxSecQuestion2.SelectedValue is int v2 ? v2 : 0;
-                int ThirdChallengeQuestion = cbxSecQuestion3.SelectedValue is int v3 ? v3 : 0;
+                int FirstChallengeQuestion = cbxSecQuestion1.SelectedValue != null ? Convert.ToInt32(cbxSecQuestion1.SelectedValue) : 0;
+                int SecondChallengeQuestion = cbxSecQuestion2.SelectedValue != null ? Convert.ToInt32(cbxSecQuestion2.SelectedValue) : 0;
+                int ThirdChallengeQuestion = cbxSecQuestion3.SelectedValue != null ? Convert.ToInt32(cbxSecQuestion3.SelectedValue) : 0;
                 string FirstChallengeAnswer = tbxSecQuestAns1.Text.Trim();
                 string SecondChallengeAnswer = tbxSecQuestAns2.Text.Trim();
                 string ThirdChallengeAnswer = tbxSecQuestAns3.Text.Trim();

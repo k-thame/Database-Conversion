@@ -1,90 +1,35 @@
 ﻿using System;
-using System.Data;
-using System.Data.SqlClient;
 using System.Windows.Forms;
+using Microsoft.Data.Sqlite;
 
 namespace ThameJordan25SU233x
 {
     internal class clsLogon
     {
-        // Connection string
-        private const string CONNECT_STRING = @"Server=3.130.26.194;Database=inew233xsu25;User Id=ThameJ25Su233x;Password=hbt95Ts2";
-        private static SqlConnection _cntDatabase = new SqlConnection(CONNECT_STRING);
+        // All DB access goes through clsSQL so the connection string lives in one place
+        public static void OpenDatabase() { }
+        public static void CloseDatabase() { }
 
-        // Connection helper
-        private static SqlConnection GetConnection()
-        {
-            if (_cntDatabase == null)
-                _cntDatabase = new SqlConnection(CONNECT_STRING);
-
-            if (_cntDatabase.State != ConnectionState.Open)
-                _cntDatabase.Open();
-
-            return _cntDatabase;
-        }
-
-        public static void OpenDatabase()
-        {
-            try
-            {
-                if (_cntDatabase == null || _cntDatabase.State == ConnectionState.Closed)
-                {
-                    _cntDatabase = new SqlConnection(CONNECT_STRING);
-                }
-                if (_cntDatabase.State != ConnectionState.Open)
-                {
-                    _cntDatabase.Open();
-                }
-            }
-            catch (SqlException ex)
-            {
-                MessageBox.Show("Error opening database: " + ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        public static void CloseDatabase()
-        {
-            try
-            {
-                _cntDatabase.Close();
-            }
-            catch (SqlException ex)
-            {
-                MessageBox.Show("Error closing database: " + ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        // Validate user credentials for login
+        // Checks username and password, returns true if valid
         public static bool ValidateUserCredentials(string username, string password, out string errorMessage)
         {
             errorMessage = "";
             try
             {
-                OpenDatabase();
-                string query = @"SELECT AccountDisabled, AccountDeleted FROM ThameJ25Su233x.Logon WHERE LogonName = @Username AND Password = @Password";
-
-                using (SqlCommand cmd = new SqlCommand(query, GetConnection()))
+                using (var cn = clsSQL.GetOpenConnection())
+                using (var cmd = cn.CreateCommand())
                 {
+                    cmd.CommandText = "SELECT AccountDisabled, AccountDeleted FROM Logon WHERE LogonName = @Username AND Password = @Password";
                     cmd.Parameters.AddWithValue("@Username", username);
                     cmd.Parameters.AddWithValue("@Password", password);
-
-                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    using (var r = cmd.ExecuteReader())
                     {
-                        if (reader.Read())
+                        if (r.Read())
                         {
-                            bool disabled = reader["AccountDisabled"] != DBNull.Value && (bool)reader["AccountDisabled"];
-                            bool deleted = reader["AccountDeleted"] != DBNull.Value && (bool)reader["AccountDeleted"];
-
-                            if (deleted)
-                            {
-                                errorMessage = "Your account has been deleted.";
-                                return false;
-                            }
-                            if (disabled)
-                            {
-                                errorMessage = "Your account has been disabled.";
-                                return false;
-                            }
+                            bool disabled = !r.IsDBNull(0) && r.GetInt64(0) == 1;
+                            bool deleted = !r.IsDBNull(1) && r.GetInt64(1) == 1;
+                            if (deleted) { errorMessage = "Your account has been deleted."; return false; }
+                            if (disabled) { errorMessage = "Your account has been disabled."; return false; }
                             return true;
                         }
                         errorMessage = "Invalid username or password.";
@@ -92,64 +37,39 @@ namespace ThameJordan25SU233x
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                errorMessage = "Error validating credentials:\n" + ex.Message;
-                return false;
-            }
-            finally
-            {
-                CloseDatabase();
-            }
+            catch (Exception ex) { errorMessage = "Error validating credentials:\n" + ex.Message; return false; }
         }
 
-        // Get PersonID by username 
+        // Returns the PersonID for a given username
         public static string GetUserPersonID(string username)
         {
             try
             {
-                OpenDatabase();
-                string query = @"SELECT PersonID FROM ThameJ25Su233x.Logon WHERE LogonName = @Username";
-                using (SqlCommand cmd = new SqlCommand(query, GetConnection()))
+                using (var cn = clsSQL.GetOpenConnection())
+                using (var cmd = cn.CreateCommand())
                 {
+                    cmd.CommandText = "SELECT PersonID FROM Logon WHERE LogonName = @Username";
                     cmd.Parameters.AddWithValue("@Username", username);
-                    object result = cmd.ExecuteScalar();
-                    return result?.ToString() ?? "Unknown";
+                    return cmd.ExecuteScalar()?.ToString() ?? "Unknown";
                 }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error retrieving user PersonID:\n" + ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return "Unknown";
-            }
-            finally
-            {
-                CloseDatabase();
-            }
+            catch (Exception ex) { MessageBox.Show("Error retrieving user PersonID:\n" + ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return "Unknown"; }
         }
 
+        // Returns the position title for a given username
         public static string GetUserPositionTitle(string username)
         {
             try
             {
-                OpenDatabase();
-                string query = @"SELECT PositionTitle FROM ThameJ25Su233x.Logon WHERE LogonName = @Username";
-                using (SqlCommand cmd = new SqlCommand(query, GetConnection()))
+                using (var cn = clsSQL.GetOpenConnection())
+                using (var cmd = cn.CreateCommand())
                 {
+                    cmd.CommandText = "SELECT PositionTitle FROM Logon WHERE LogonName = @Username";
                     cmd.Parameters.AddWithValue("@Username", username);
-                    object result = cmd.ExecuteScalar();
-                    return result?.ToString() ?? "";
+                    return cmd.ExecuteScalar()?.ToString() ?? "";
                 }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error retrieving position title:\n" + ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return "";
-            }
-            finally
-            {
-                CloseDatabase();
-            }
+            catch (Exception ex) { MessageBox.Show("Error retrieving position title:\n" + ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error); return ""; }
         }
     }
 }

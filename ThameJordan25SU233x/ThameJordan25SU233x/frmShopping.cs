@@ -1,6 +1,7 @@
 ﻿using ACS_JThameM7;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.IO;
@@ -33,10 +34,8 @@ namespace ThameJordan25SU233x
         {
             try
             {
-                clsSQL.PopulateDGV(dgvItems);
                 LoadCategories();
                 FilterInventory();
-                fullImageData = clsSQL.PopulateDGV(dgvItems);
                 dgvItems.SelectionChanged += dgvItems_SelectionChanged;
 
                 if (IsPOSSale)
@@ -73,22 +72,21 @@ namespace ThameJordan25SU233x
         private void FilterInventory()
         {
             string search = tbxSearch.Text.Trim();
-            int? categoryId = cbxCategories.SelectedValue is DBNull ? null : (int?)cbxCategories.SelectedValue;
-
+            int? categoryId = cbxCategories.SelectedValue == null || cbxCategories.SelectedValue is DBNull ? null : (int?)Convert.ToInt32(cbxCategories.SelectedValue);
             DataTable dt = db.SearchAndFilterInventory(search, categoryId);
-
             fullImageData = dt;
             dgvItems.Columns.Clear();
-
             DataGridViewImageColumn imageCol = new DataGridViewImageColumn
             {
                 Name = "ProductImage",
                 HeaderText = "Product Image",
                 ImageLayout = DataGridViewImageCellLayout.Zoom
             };
-
             dgvItems.Columns.Add(imageCol);
             dgvItems.DataSource = dt;
+
+            // Manually call formatting
+            dgvItems_DataBindingComplete(dgvItems, new DataGridViewBindingCompleteEventArgs(ListChangedType.Reset));
         }
 
         private void tbxSearch_TextChanged(object sender, EventArgs e) => FilterInventory();
@@ -112,7 +110,7 @@ namespace ThameJordan25SU233x
                 {
                     DataGridViewRow row = dgvItems.Rows[e.RowIndex];
                     _selectedItemName = row.Cells["ItemName"].Value.ToString();
-                    _selectedItemPrice = Convert.ToDecimal(row.Cells["RetailPrice"].Value);
+                    _selectedItemPrice = Convert.ToDecimal(row.Cells["RetailPrice"].Value.ToString().Replace("$", ""));
 
                     int quantityInStock = Convert.ToInt32(row.Cells["Quantity"].Value);
 
@@ -180,38 +178,46 @@ namespace ThameJordan25SU233x
             dgvItems.DefaultCellStyle.Font = new Font("Segoe UI", 9);
             dgvItems.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
-            if (dgvItems.Columns.Contains("ProductImage"))
-                dgvItems.Columns["ProductImage"].Width = 65;
-
             if (dgvItems.Columns.Contains("InventoryID"))
                 dgvItems.Columns["InventoryID"].Visible = false;
             if (dgvItems.Columns.Contains("ItemImage"))
                 dgvItems.Columns["ItemImage"].Visible = false;
 
             if (dgvItems.Columns.Contains("ItemName"))
+            {
                 dgvItems.Columns["ItemName"].HeaderText = "Product Name";
-
+                dgvItems.Columns["ItemName"].FillWeight = 100;
+            }
             if (dgvItems.Columns.Contains("Quantity"))
+            {
                 dgvItems.Columns["Quantity"].HeaderText = "Stock Left";
-
+                dgvItems.Columns["Quantity"].FillWeight = 80;
+            }
             if (dgvItems.Columns.Contains("RetailPrice"))
             {
                 dgvItems.Columns["RetailPrice"].HeaderText = "Price";
-                dgvItems.Columns["RetailPrice"].DefaultCellStyle.Format = "C2";
                 dgvItems.Columns["RetailPrice"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                dgvItems.Columns["RetailPrice"].FillWeight = 80;
             }
-
             if (dgvItems.Columns.Contains("ItemDescription"))
             {
                 dgvItems.Columns["ItemDescription"].HeaderText = "Description";
-                dgvItems.Columns["ItemDescription"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
                 dgvItems.Columns["ItemDescription"].DefaultCellStyle.WrapMode = DataGridViewTriState.True;
+                dgvItems.Columns["ItemDescription"].FillWeight = 400;
             }
+            if (dgvItems.Columns.Contains("ProductImage"))
+                dgvItems.Columns["ProductImage"].FillWeight = 50;
+
+            dgvItems.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvItems.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
+            dgvItems.RowTemplate.Height = 65;
+            dgvItems.ReadOnly = true;
+            dgvItems.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvItems.AllowUserToAddRows = false;
 
             for (int i = 0; i < dgvItems.Rows.Count; i++)
             {
                 if (i >= fullImageData.Rows.Count) break;
-
                 byte[] imgBytes = fullImageData.Rows[i]["ItemImage"] as byte[];
                 if (imgBytes != null && dgvItems.Rows[i].Cells["ProductImage"] is DataGridViewImageCell imgCell)
                 {
@@ -309,7 +315,7 @@ namespace ThameJordan25SU233x
 
                 int itemID = Convert.ToInt32(row.Cells["InventoryID"].Value);
                 string itemName = row.Cells["ItemName"].Value.ToString();
-                decimal price = Convert.ToDecimal(row.Cells["RetailPrice"].Value);
+                decimal price = Convert.ToDecimal(row.Cells["RetailPrice"].Value.ToString().Replace("$", ""));
                 int stock = Convert.ToInt32(row.Cells["Quantity"].Value);
                 int desiredQty = (int)nudQuantity.Value;
 
@@ -408,7 +414,7 @@ namespace ThameJordan25SU233x
                     lbxCart.Items.Clear();
 
                     int selectedRowIndex = dgvItems.CurrentCell?.RowIndex ?? -1;
-                    clsSQL.PopulateDGV(dgvItems);
+                    FilterInventory();
 
                     if (selectedRowIndex >= 0 && selectedRowIndex < dgvItems.Rows.Count)
                     {
@@ -488,7 +494,7 @@ namespace ThameJordan25SU233x
                 "3) Choose quantity, Add To Cart\n" +
                 "4) Manage your cart (decrease/remove/clear)\n" +
                 "5) Checkout when ready\n\n" +
-                "Tips:\n- Zero stock items can’t be added\n- Review your cart before checkout",
+                "Tips:\n- Zero stock items can't be added\n- Review your cart before checkout",
                 "Shopping Help", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
